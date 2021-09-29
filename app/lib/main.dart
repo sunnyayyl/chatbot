@@ -49,7 +49,7 @@ class _MyApp extends State<MyApp> {
   late final ScrollController _controller;
   late SharedPreferences prefs;
   late var weather;
-  late var wikipedia;
+  late List wikipedia;
   getData() async {
     tokenizer = jsonDecode(await DefaultAssetBundle.of(context)
         .loadString("assets/word_dict.json"));
@@ -173,8 +173,8 @@ class _MyApp extends State<MyApp> {
             "time": DateFormat("kk:mm").format(DateTime.now()),
             "main": weather[0],
             "temperature": (weather[1]- 273.15).toStringAsFixed(1),
-            "wikipedia_title": wikipedia[0]??"unknown",
-            "wikipedia_link":wikipedia[1]??"unknown"
+            "wikipedia_title": (wikipedia.isNotEmpty)?wikipedia[0]:"unknown",
+            "wikipedia_link":(wikipedia.isNotEmpty)?wikipedia[1]:"unknown"
           });
     } else {
       result = "";
