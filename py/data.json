@@ -103,7 +103,7 @@
       "What do mean"
     ],
     "responses": [
-      "For result about {wikipedia_title}, please read {wikipedia_link}"
+      "For result about {wikipedia_title}, please read \n {wikipedia_link}"
     ],
     "jobs": ["wikipedia"]
   }

@@ -1,9 +1,11 @@
 import 'dart:convert';
+import 'package:flutter/gestures.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:tflite_flutter/tflite_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 extension formatting on String {
   String format(Map<String, String> a) {
@@ -235,6 +237,20 @@ class _MyApp extends State<MyApp> {
                           child: ListView.builder(
                             controller: _controller,
                             itemBuilder: (context, index) {
+                              List<InlineSpan> a=[];
+                              for (var i in messages[index].message.split(" ")){
+                                if (Uri.parse(i).isAbsolute){
+                                  a.add(TextSpan(
+                                    text: i+" ",
+                                    style: const TextStyle(color: Colors.blue),
+                                    recognizer: TapGestureRecognizer()
+                                      ..onTap = () { launch(i);
+                                      },
+                                  ),);
+                                }else{
+                                  a.add(TextSpan(text:i+" ",style: const TextStyle(color: Colors.black)));
+                                }
+                              }
                               return Container(
                                 padding: const EdgeInsets.only(left: 16,right: 16,top: 10,bottom: 10),
                                 child: Align(alignment: (messages[index].sender == "bot"?Alignment.topLeft:Alignment.topRight),child: Container(
@@ -243,7 +259,7 @@ class _MyApp extends State<MyApp> {
                                     color: (messages[index].sender  == "bot"?Colors.grey.shade200:Colors.blue[300]),
                                   ),
                                   padding: const EdgeInsets.all(16),
-                                  child: Text(messages[index].message, style: const TextStyle(fontSize: 15),),
+                                  child: RichText(text: TextSpan(children: a),)
                                 ),),
                               );
                             },
