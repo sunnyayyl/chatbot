@@ -1,0 +1,21 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[[source]]
+url = "https://google-coral.github.io/py-repo/"
+verify_ssl = false
+name = "tflite"
+
+[packages]
+tensorflow = "*"
+pandas = "*"
+scikit-learn = "*"
+tflite-runtime = "*"
+numpyencoder = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3.9"
