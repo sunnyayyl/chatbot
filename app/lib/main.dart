@@ -6,7 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:tflite_flutter/tflite_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
-
+import 'package:path_provider/path_provider.dart';
+import 'dart:io';
 extension formatting on String {
   String format(Map<String, String> a) {
     return replaceAllMapped(RegExp(r"{(.*?)}"), (match) {
@@ -45,8 +46,7 @@ class MyApp extends StatefulWidget {
 
 class _MyApp extends State<MyApp> {
   late List<Widget> _widgetOptions;
-  //late final Interpreter interpreter_;
-  late final Future<Interpreter> interpreter;
+  late final Interpreter interpreter;
   late final TextEditingController controller;
   late String result;
   late String punctuation;
@@ -59,39 +59,105 @@ class _MyApp extends State<MyApp> {
   late SharedPreferences prefs;
   late var weather;
   late List wikipedia;
+  late var tflite_model;
+  late var version;
+  late var data;
+  Future<String> get _localPath async {
+    final directory = await getApplicationDocumentsDirectory();
+    return directory.path;
+  }
+  Future<File> get _tflite_model async {
+    final path = await _localPath;
+    return File('$path/model.tflite');
+  }
+  Future<File> get _version async {
+    final path = await _localPath;
+    return File('$path/version.txt');
+  }
+  Future<File> get _encoder async {
+    final path = await _localPath;
+    return File('$path/encoder.json');
+  }
+  Future<File> get _word_dict async {
+    final path = await _localPath;
+    return File('$path/word_dict.json');
+  }
+  Future<File> get _respondes async {
+    final path = await _localPath;
+    return File('$path/responses.json');
+  }
+  Future<File> get _jobs async {
+    final path = await _localPath;
+    return File('$path/jobs.json');
+  }
+  void download_(String url,File file) async{
+    final request = await HttpClient().getUrl(Uri.parse(url));
+    final response = await request.close();
+    response.pipe(file.openWrite());
+  }
+  void download(String url,File file,bool update) async{
+    if (file.existsSync()){
+      if(update){
+        download_(url, file);
+      }
+    }else{
+      print("hi");
+      download_(url, file);
+    }
+  }
   getData() async {
+    final responses_ = await _respondes;
+    final jobs_ = await _jobs;
+    final encoder_ = await _encoder;
+    final tokenizer_ = await _word_dict;
+    final version_ = await _version;
+    final model_ = await _tflite_model;
+    bool update=false;
+    final request = await http.get(Uri.parse("https://raw.githubusercontent.com/sunny0531/Project/main/version.txt"));
+    final response = request.body.toString();
+    print(response);
+    if (version_.existsSync()&&response!=version_.readAsStringSync()){
+      print("updating");
+        version_.writeAsStringSync(response);
+        update=true;
+    }
+    download("https://raw.githubusercontent.com/sunny0531/Project/main/responses.json", responses_,update);
+    download("https://raw.githubusercontent.com/sunny0531/Project/main/jobs.json", jobs_,update);
+    download("https://raw.githubusercontent.com/sunny0531/Project/main/encoder.json", encoder_,update);
+    download("https://raw.githubusercontent.com/sunny0531/Project/main/word_dict.json", tokenizer_,update);
+    download("https://raw.githubusercontent.com/sunny0531/Project/main/model.tflite", model_,update);
+    responses= jsonDecode(responses_.readAsStringSync());
+    jobs = jsonDecode(jobs_.readAsStringSync());
+    encoder = jsonDecode(encoder_.readAsStringSync());
+    tokenizer = jsonDecode(tokenizer_.readAsStringSync());
+    interpreter = Interpreter.fromFile(model_);
+    print(responses);
     SharedPreferences prefs_ = await SharedPreferences.getInstance();
     messages=[for (var i in json.decode(prefs_.getString("data")??"[]")) Message.fromJson(i)];
     if(messages.isEmpty){
       messages=[Message(message: "Nice to meet you, there is lots of thing I can do.", sender: "bot"),Message(message: "You can ask me to search wikipedia by using \"What is ...\" or asking the weather with \"what's the weather today\".", sender: "bot"),Message(message: "There's still a lot function for you to discover!", sender: "bot")];
     }
-    tokenizer = jsonDecode(await DefaultAssetBundle.of(context)
-        .loadString("assets/word_dict.json"));
-    Map encoder_ = {};
-    encoder = jsonDecode(
-        await DefaultAssetBundle.of(context).loadString("assets/encoder.json"));
+
+    Map encoder__= {};
+
     for (var i in encoder.keys) {
-      encoder_[encoder[i]] = i;
+      encoder__[encoder[i]] = i;
     }
-    encoder = encoder_;
-    responses = jsonDecode(await DefaultAssetBundle.of(context)
-        .loadString("assets/responses.json"));
-    jobs = jsonDecode(
-        await DefaultAssetBundle.of(context).loadString("assets/jobs.json"));
+    encoder = encoder__;
     weather=await getWeather();
+    return "";
   }
 
   @override
   void initState() {
     super.initState();
-    interpreter = Interpreter.fromAsset('model.tflite');
     controller = TextEditingController();
     result = "";
     _controller=ScrollController();
     punctuation = r"""!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~""";
     messages = [];
     wikipedia=[];
-    getData();
+    data=getData();
   }
 
   argmax(List a) {
@@ -145,8 +211,7 @@ class _MyApp extends State<MyApp> {
     return [data[1][0],data[3][0]];
   }
 
-  Future<dynamic> get_result(String input, AsyncSnapshot<dynamic> snapshot) async {
-    Interpreter data = (snapshot.data as Interpreter);
+  Future<dynamic> get_result(String input, Interpreter data) async {
     String input_ = "";
     List<Object> newInput = [];
     Tensor inputDetails = data.getInputTensor(0);
@@ -223,106 +288,120 @@ class _MyApp extends State<MyApp> {
           builder: (context) {
             _widgetOptions=<Widget>[
               FutureBuilder(
-                builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-                  sent(a){
+                builder:(context, snapshot) {
+                  if (snapshot.hasData){
+                    sent(a){
 
-                    if (controller.text.isNotEmpty){
-                      var input=controller.text;
-                      controller.text="";
-                      messages.add(Message(message: input, sender: "you"));
-                      setState(() {
-                      });
-                      get_result(input, snapshot).then((value) {
-                        messages.add(Message(message: value, sender: "bot"));
+                      if (controller.text.isNotEmpty){
+                        var input=controller.text;
+                        controller.text="";
+                        messages.add(Message(message: input, sender: "you"));
                         setState(() {
                         });
-                        Future.delayed(const Duration(milliseconds: 100), () {
-                          _controller.animateTo(
-                            _controller.position.maxScrollExtent,
-                            curve: Curves.easeOut,
-                            duration: const Duration(milliseconds: 500),
-                          );
+                        get_result(input, interpreter).then((value) {
+                          messages.add(Message(message: value, sender: "bot"));
+                          setState(() {
+                          });
+                          Future.delayed(const Duration(milliseconds: 100), () {
+                            _controller.animateTo(
+                              _controller.position.maxScrollExtent,
+                              curve: Curves.easeOut,
+                              duration: const Duration(milliseconds: 500),
+                            );
+                          });
                         });
-                      });
 
 
+                      }
                     }
-                  }
-                  if (snapshot.hasData) {
-                    return Column(
-                      children: [
-                        Expanded(
-                          child: ListView.builder(
-                            controller: _controller,
-                            itemBuilder: (context, index) {
-                              List<InlineSpan> a=[];
-                              for (var i in messages[index].message.split(" ")){
-                                if (Uri.parse(i).isAbsolute){
-                                  a.add(TextSpan(
-                                    text: i+" ",
-                                    style: const TextStyle(color: Colors.blue),
-                                    recognizer: TapGestureRecognizer()
-                                      ..onTap = () { launch(i);
-                                      },
-                                  ),);
-                                }else{
-                                  a.add(TextSpan(text:i+" ",style: const TextStyle(color: Colors.black)));
+                    if (snapshot.hasData) {
+                      return Column(
+                        children: [
+                          Expanded(
+                            child: ListView.builder(
+                              controller: _controller,
+                              itemBuilder: (context, index) {
+                                List<InlineSpan> a=[];
+                                for (var i in messages[index].message.split(" ")){
+                                  if (Uri.parse(i).isAbsolute){
+                                    a.add(TextSpan(
+                                      text: i+" ",
+                                      style: const TextStyle(color: Colors.blue),
+                                      recognizer: TapGestureRecognizer()
+                                        ..onTap = () { launch(i);
+                                        },
+                                    ),);
+                                  }else{
+                                    a.add(TextSpan(text:i+" ",style: const TextStyle(color: Colors.black)));
+                                  }
                                 }
-                              }
-                              return Container(
-                                padding: const EdgeInsets.only(left: 16,right: 16,top: 10,bottom: 10),
-                                child: Align(alignment: (messages[index].sender == "bot"?Alignment.topLeft:Alignment.topRight),child: Container(
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(15),
-                                    color: (messages[index].sender  == "bot"?Colors.grey.shade200:Colors.blue[300]),
-                                  ),
-                                  padding: const EdgeInsets.all(16),
-                                  child: RichText(text: TextSpan(children: a),)
-                                ),),
-                              );
-                            },
-                            itemCount: messages.length,
-                            shrinkWrap: true,
-                            padding: const EdgeInsets.only(top: 10, bottom: 10),),
-                        ),
-                        Align(
-                          alignment: Alignment.bottomLeft,
-                          child: Container(
-                            padding: const EdgeInsets.only(
-                                left: 10, bottom: 10, top: 10),
-                            height: 60,
-                            child: Row(
-                              children: [
-                                Flexible(
-                                  child: TextField(
-                                    controller: controller,
-                                    decoration: const InputDecoration(
-                                        border: OutlineInputBorder(),
-                                        hintText: "Ask me something"),
-                                    textInputAction: TextInputAction.go,
-                                    onSubmitted: sent,
-                                  ),
-                                ),
-                                IconButton(
-                                  icon: const Icon(Icons.send),
-                                  onPressed:()=>sent(""),
-                                ),
-                              ],
-                            ),
+                                return Container(
+                                  padding: const EdgeInsets.only(left: 16,right: 16,top: 10,bottom: 10),
+                                  child: Align(alignment: (messages[index].sender == "bot"?Alignment.topLeft:Alignment.topRight),child: Container(
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(15),
+                                        color: (messages[index].sender  == "bot"?Colors.grey.shade200:Colors.blue[300]),
+                                      ),
+                                      padding: const EdgeInsets.all(16),
+                                      child: RichText(text: TextSpan(children: a),)
+                                  ),),
+                                );
+                              },
+                              itemCount: messages.length,
+                              shrinkWrap: true,
+                              padding: const EdgeInsets.only(top: 10, bottom: 10),),
                           ),
-                        )
+                          Align(
+                            alignment: Alignment.bottomLeft,
+                            child: Container(
+                              padding: const EdgeInsets.only(
+                                  left: 10, bottom: 10, top: 10),
+                              height: 60,
+                              child: Row(
+                                children: [
+                                  Flexible(
+                                    child: TextField(
+                                      controller: controller,
+                                      decoration: const InputDecoration(
+                                          border: OutlineInputBorder(),
+                                          hintText: "Ask me something"),
+                                      textInputAction: TextInputAction.go,
+                                      onSubmitted: sent,
+                                    ),
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.send),
+                                    onPressed:()=>sent(""),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          )
+                        ],
+                      );
+                    } else if (snapshot.hasError) {
+                      log(snapshot.error.toString());
+                      return const Center(
+                        child: Text("Error"),
+                      );
+                    } else {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+                  }else if(snapshot.hasError){
+                    return const Text("error");
+                  }else{
+                    return  Center(child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: const [
+                        CircularProgressIndicator(),
+                        Text("Downloading the required file")
                       ],
-                    );
-                  } else if (snapshot.hasError) {
-                    log(snapshot.error.toString());
-                    return const Center(
-                      child: Text("Error"),
-                    );
-                  } else {
-                    return const Center(child: CircularProgressIndicator());
+                    ),);
                   }
+                  return const Center(child: CircularProgressIndicator(),);
                 },
-                future: interpreter,
+                future: data,
               ),
               FutureBuilder(builder: (context, AsyncSnapshot<dynamic> snapshot) {
                 if (snapshot.hasData){
