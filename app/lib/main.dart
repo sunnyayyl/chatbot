@@ -19,10 +19,19 @@ extension formatting on String {
 }
 
 class Message {
-  String message;
-  String sender;
+  late String message;
+  late String sender;
 
   Message({required this.message, required this.sender});
+  Map<String, dynamic> toJson() =>
+      {
+        "message":message,
+        "sender":sender
+      };
+   Message.fromJson(Map<String, dynamic> json){
+    message=json["message"];
+    sender=json["sender"];
+  }
 }
 
 void main() => runApp(const MyApp());
@@ -51,6 +60,11 @@ class _MyApp extends State<MyApp> {
   late var weather;
   late List wikipedia;
   getData() async {
+    SharedPreferences prefs_ = await SharedPreferences.getInstance();
+    messages=[for (var i in json.decode(prefs_.getString("data")??"[]")) Message.fromJson(i)];
+    if(messages.isEmpty){
+      messages=[Message(message: "Nice to meet you, there is lots of thing I can do.", sender: "bot"),Message(message: "You can ask me to search wikipedia by using \"What is ...\" or asking the weather with \"what's the weather today\".", sender: "bot"),Message(message: "There's still a lot function for you to discover!", sender: "bot")];
+    }
     tokenizer = jsonDecode(await DefaultAssetBundle.of(context)
         .loadString("assets/word_dict.json"));
     Map encoder_ = {};
@@ -130,14 +144,15 @@ class _MyApp extends State<MyApp> {
     List data=json.decode(data_.body);
     return [data[1][0],data[3][0]];
   }
-  Future<dynamic> get_result(String input, AsyncSnapshot<dynamic> snapshot) async {
 
+  Future<dynamic> get_result(String input, AsyncSnapshot<dynamic> snapshot) async {
     Interpreter data = (snapshot.data as Interpreter);
     String input_ = "";
     List<Object> newInput = [];
     Tensor inputDetails = data.getInputTensor(0);
     Tensor outputDetails = data.getOutputTensor(0);
     List text = [];
+
     input.split("").forEach((char) {
       if (!punctuation.contains(char)) {
         input_ = input_ + char;
@@ -196,7 +211,9 @@ class _MyApp extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-
+    if (messages.isNotEmpty){
+      SharedPreferences.getInstance().then((value) => value.setString("data", json.encode([for (var i in messages) i.toJson()])));
+    }
     return MaterialApp(
         title: 'Flutter Demo',
         theme: ThemeData(
@@ -213,9 +230,10 @@ class _MyApp extends State<MyApp> {
                       var input=controller.text;
                       controller.text="";
                       messages.add(Message(message: input, sender: "you"));
+                      setState(() {
+                      });
                       get_result(input, snapshot).then((value) {
                         messages.add(Message(message: value, sender: "bot"));
-
                         setState(() {
                         });
                         Future.delayed(const Duration(milliseconds: 100), () {
@@ -317,7 +335,7 @@ class _MyApp extends State<MyApp> {
                 }
               },future: SharedPreferences.getInstance(),),
               ListView(children: [
-                ListTile(title: const Text("Open source licence"),onTap: () => showLicensePage(context: context),)
+                ListTile(title: const Text("Open source licence"),onTap: () => showLicensePage(context: context),),
               ],),
             ];
             return Scaffold(

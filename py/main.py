@@ -1,3 +1,4 @@
+import ast
 import json
 import os
 import string
@@ -47,20 +48,20 @@ model.compile(loss="sparse_categorical_crossentropy", optimizer='adam', metrics=
 train = model.fit(x_train, y_train, epochs=200)
 converter = tf.lite.TFLiteConverter.from_keras_model(model)
 tflite_model = converter.convert()
-with open('../app/assets/model.tflite', 'wb') as f:
+with open('../model.tflite', 'wb') as f:
     f.write(tflite_model)
-with open('../app/assets/word_dict.json', 'w') as f:
+with open('../word_dict.json', 'w') as f:
     json.dump(tokenizer.word_index, f)
-with open('../app/assets/encoder.json', 'w') as f:
+with open('../encoder.json', 'w') as f:
     json.dump(dict(zip(encoder.classes_, encoder.transform(encoder.classes_))), f, cls=NumpyEncoder)
-with open('../app/assets/responses.json', 'w') as f:
+with open('../responses.json', 'w') as f:
     with open("data.json") as ff:
         data = json.load(ff)
     out = {}
     for iii in data:
         out[iii["tag"]] = iii["responses"]
     json.dump(out, f)
-with open('../app/assets/jobs.json', 'w') as f:
+with open('../jobs.json', 'w') as f:
     with open("data.json") as ff:
         data = json.load(ff)
     out = {}
@@ -68,3 +69,8 @@ with open('../app/assets/jobs.json', 'w') as f:
         if "jobs" in iii:
             out[iii["tag"]] = iii["jobs"]
     json.dump(out, f)
+with open('../version.txt', 'r') as f:
+    a=str(int(f.read()) + 1)
+with open('../version.txt', 'w') as f:
+    f.write(a)
+

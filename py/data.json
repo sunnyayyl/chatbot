@@ -49,7 +49,8 @@
     "input": [
       "time",
       "What time is it now",
-      "Tell me the time"
+      "Tell me the time",
+      "What time is it"
     ],
     "responses": [
       "It's {time}"
