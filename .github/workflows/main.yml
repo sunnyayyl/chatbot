@@ -22,6 +22,7 @@ jobs:
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
+    - run: cd app
     - uses: actions/checkout@v2
     - uses: actions/setup-java@v1
       with:
@@ -33,3 +34,8 @@ jobs:
     - run: flutter test
     - run: flutter build apk
     - run: flutter build appbundle
+    - name: Upload apk
+      uses: actions/upload-artifact@v2
+      with:
+        name: apk
+        path: build/app/outputs/flutter-apk/app.apk
