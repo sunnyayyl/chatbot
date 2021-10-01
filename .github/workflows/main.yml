@@ -32,10 +32,10 @@ jobs:
       with:
         flutter-version: '2.0.5'
     - run: flutter pub get
-    - run: flutter build apk 
-    - run: flutter build appbundle
+    - run: flutter build apk --debug
+    - run: flutter build appbundle --debug
     - name: Upload apk
       uses: actions/upload-artifact@v2
       with:
         name: apk
-        path: build/app/outputs/flutter-apk/app.apk
+        path: build/app/outputs/flutter-apk/app-debug.apk
