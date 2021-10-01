@@ -38,4 +38,9 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: apk
-        path: build/app/outputs/flutter-apk/app-debug.apk
+        path: ./build/app/outputs/flutter-apk/app-debug.apk
+    - name: Upload aab
+      uses: actions/upload-artifact@v2
+      with:
+        name: aab
+        path: ./build/app/outputs/flutter-apk/app-debug.aab
