@@ -320,15 +320,19 @@ class _MyApp extends State<MyApp> {
                               itemBuilder: (context, index) {
                                 List<InlineSpan> a=[];
                                 for (var i in messages[index].message.split(" ")){
-                                  if (Uri.parse(i).isAbsolute){
-                                    a.add(TextSpan(
-                                      text: i+" ",
-                                      style: const TextStyle(color: Colors.blue),
-                                      recognizer: TapGestureRecognizer()
-                                        ..onTap = () { launch(i);
-                                        },
-                                    ),);
-                                  }else{
+                                  try {
+                                    if (Uri.parse(i).isAbsolute){
+                                      a.add(TextSpan(
+                                        text: i+" ",
+                                        style: const TextStyle(color: Colors.blue),
+                                        recognizer: TapGestureRecognizer()
+                                          ..onTap = () { launch(i);
+                                          },
+                                      ),);
+                                    }else{
+                                      a.add(TextSpan(text:i+" ",style: const TextStyle(color: Colors.black)));
+                                    }
+                                  }on FormatException{
                                     a.add(TextSpan(text:i+" ",style: const TextStyle(color: Colors.black)));
                                   }
                                 }
