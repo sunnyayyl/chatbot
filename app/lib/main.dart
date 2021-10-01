@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/gestures.dart';
+import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
@@ -93,15 +94,14 @@ class _MyApp extends State<MyApp> {
   void download_(String url,File file) async{
     final request = await HttpClient().getUrl(Uri.parse(url));
     final response = await request.close();
-    response.pipe(file.openWrite());
+    await response.pipe(file.openWrite());
   }
-  void download(String url,File file,bool update) async{
+  void download(String url,File file,bool update){
     if (file.existsSync()){
       if(update){
         download_(url, file);
       }
     }else{
-      print("hi");
       download_(url, file);
     }
   }
@@ -115,9 +115,7 @@ class _MyApp extends State<MyApp> {
     bool update=false;
     final request = await http.get(Uri.parse("https://raw.githubusercontent.com/sunny0531/Project/main/version.txt"));
     final response = request.body.toString();
-    print(response);
     if (version_.existsSync()&&response!=version_.readAsStringSync()){
-      print("updating");
         version_.writeAsStringSync(response);
         update=true;
     }
@@ -131,7 +129,6 @@ class _MyApp extends State<MyApp> {
     encoder = jsonDecode(encoder_.readAsStringSync());
     tokenizer = jsonDecode(tokenizer_.readAsStringSync());
     interpreter = Interpreter.fromFile(model_);
-    print(responses);
     SharedPreferences prefs_ = await SharedPreferences.getInstance();
     messages=[for (var i in json.decode(prefs_.getString("data")??"[]")) Message.fromJson(i)];
     if(messages.isEmpty){
@@ -388,7 +385,7 @@ class _MyApp extends State<MyApp> {
                       return const Center(child: CircularProgressIndicator());
                     }
                   }else if(snapshot.hasError){
-                    return const Text("error");
+                      return  AlertDialog(title: const Text("Restart"),content:const Text("Please restart the app"),actions: [TextButton(onPressed: ()=> SystemChannels.platform.invokeMethod('SystemNavigator.pop'), child: Text("Ok"))],);
                   }else{
                     return  Center(child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
