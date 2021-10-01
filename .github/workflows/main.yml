@@ -38,9 +38,4 @@ jobs:
       with:
         name: apk
         path: app/build/app/outputs/flutter-apk/app-debug.apk
-    - run: flutter build appbundle --debug
-    - name: Upload aab
-      uses: actions/upload-artifact@v2
-      with:
-        name: aab
-        path: app/build/app/outputs/bundle/debug/app-debug.aab
+
