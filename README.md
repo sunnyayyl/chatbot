@@ -1,3 +1,2 @@
 # Project
-On device "chatbot" with tf lite
-<br>
+On device "chatbot" with tensorflow lite
