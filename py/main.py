@@ -1,8 +1,6 @@
-import ast
 import json
 import os
 import string
-
 import pandas as pd
 import tensorflow as tf
 import tensorflow.keras as keras
@@ -10,8 +8,6 @@ from keras import Input
 from keras import layers
 from numpyencoder import NumpyEncoder
 from sklearn.preprocessing import LabelEncoder
-
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 tags = []
 response = []
 inputs = []
@@ -35,7 +31,6 @@ train = tokenizer.texts_to_sequences(data['inputs'])
 x_train = keras.preprocessing.sequence.pad_sequences(train)
 y_train = encoder.fit_transform(data['tags'])
 input_shape = x_train.shape[1]
-print(input_shape)
 word_count = len(tokenizer.word_index)
 output_length = encoder.classes_.shape[0]
 model = keras.Sequential()
@@ -46,22 +41,23 @@ model.add(layers.Flatten())
 model.add(layers.Dense(output_length, activation="softmax"))
 model.compile(loss="sparse_categorical_crossentropy", optimizer='adam', metrics=['accuracy'])
 train = model.fit(x_train, y_train, epochs=200)
+
 converter = tf.lite.TFLiteConverter.from_keras_model(model)
 tflite_model = converter.convert()
-with open('../model.tflite', 'wb') as f:
+with open('../app/assets/model.tflite', 'wb') as f:
     f.write(tflite_model)
-with open('../word_dict.json', 'w') as f:
+with open('../app/assets/word_dict.json', 'w') as f:
     json.dump(tokenizer.word_index, f)
-with open('../encoder.json', 'w') as f:
+with open('../app/assets/encoder.json', 'w') as f:
     json.dump(dict(zip(encoder.classes_, encoder.transform(encoder.classes_))), f, cls=NumpyEncoder)
-with open('../responses.json', 'w') as f:
+with open('../app/assets/responses.json', 'w') as f:
     with open("data.json") as ff:
         data = json.load(ff)
     out = {}
     for iii in data:
         out[iii["tag"]] = iii["responses"]
     json.dump(out, f)
-with open('../jobs.json', 'w') as f:
+with open('../app/assets/jobs.json', 'w') as f:
     with open("data.json") as ff:
         data = json.load(ff)
     out = {}
@@ -69,8 +65,5 @@ with open('../jobs.json', 'w') as f:
         if "jobs" in iii:
             out[iii["tag"]] = iii["jobs"]
     json.dump(out, f)
-with open('../version.txt', 'r') as f:
-    a=str(int(f.read()) + 1)
-with open('../version.txt', 'w') as f:
-    f.write(a)
+
 

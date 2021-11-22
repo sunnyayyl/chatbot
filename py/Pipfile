@@ -5,11 +5,11 @@ name = "pypi"
 
 [[source]]
 url = "https://google-coral.github.io/py-repo/"
-verify_ssl = false
-name = "tflite"
+verify_ssl = true
+name = "tflite_runtime"
 
 [packages]
-tensorflow = "*"
+tensorflow = "==2.6.2"
 pandas = "*"
 scikit-learn = "*"
 tflite-runtime = "*"
@@ -18,4 +18,4 @@ numpyencoder = "*"
 [dev-packages]
 
 [requires]
-python_version = "3.9"
+python_version = "3.9.1"
