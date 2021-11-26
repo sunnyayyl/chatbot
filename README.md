@@ -1,3 +1,3 @@
 # Project
 On device "chatbot" with tensorflow lite<br>
-Notebook: https://datalore.jetbrains.com/notebook/KRcObPBIafP5q7ALkmJWEj/lRioT1nehbakqL6lRxvxcL/
+Notebook: https://datalore.jetbrains.com/view/notebook/Qu8X1Me6DCQkvzWJ9Qvwhb
