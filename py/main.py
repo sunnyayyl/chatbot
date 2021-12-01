@@ -2,6 +2,7 @@ import ast
 import json
 import os
 import string
+import tarfile
 
 import pandas as pd
 import tensorflow as tf
@@ -73,4 +74,6 @@ with open('../version.txt', 'r') as f:
     a=str(int(f.read()) + 1)
 with open('../version.txt', 'w') as f:
     f.write(a)
-
+tf.saved_model.save(model, "../model")
+with tarfile.open("../model.tar.gz", "w:gz") as tar:
+    tar.add("../model", arcname="model")

@@ -9,13 +9,13 @@ verify_ssl = false
 name = "tflite"
 
 [packages]
-tensorflow = "*"
 pandas = "*"
 scikit-learn = "*"
 tflite-runtime = "*"
 numpyencoder = "*"
+tensorflow = "==2.6.2"
 
 [dev-packages]
 
 [requires]
-python_version = "3.9"
+python_version = "*"
