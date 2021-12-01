@@ -1,0 +1,70 @@
+[
+  {
+    "tag": "hello",
+    "input": [
+      "Hi",
+      "Hello there",
+      "Anyone?",
+      "Anyone there"
+    ],
+    "responses": [
+      "Hi",
+      "Hello",
+      "Nice to see you again"
+    ]
+  },
+  {
+    "tag": "name",
+    "input": [
+      "What is your name?",
+      "What's your name?",
+      "Who are you?"
+    ],
+    "responses": [
+      "I don't know, I haven't get a name yet.",
+      "I don't have any name yet, any good name recommended?",
+      "No idea, ask the developer."
+    ]
+  },
+  {
+    "tag": "age",
+    "input": [
+      "How old are you?",
+      "What's your age?"
+    ],
+    "responses": [
+      "Not even a month.",
+      "Less than a month"
+    ]
+  },
+  {
+    "tag": "What_can_you_do",
+    "input": [
+      "What can you do?"
+    ],
+    "responses": [
+      "Nothing."
+    ]
+  },
+  {"tag": "time",
+    "input": [
+      "time",
+      "What time is it now",
+      "Tell me the time",
+      "What time is it"
+    ],
+    "responses": [
+      "It's {time}"
+    ]
+  },
+  {"tag": "joke",
+    "input": [
+      "Tell me a joke",
+      "I am bored",
+      "What's the best joke you have ever heard"
+    ],
+    "responses": [
+      "Why do children eat their homework? Because teacher says it's a piece of cake!"
+    ]
+  }
+]

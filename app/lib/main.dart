@@ -1,4 +1,5 @@
 import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
@@ -35,7 +36,6 @@ class _MyApp extends State<MyApp> {
 
   late final ScrollController _controller;
 
-
   Future<String> get _encoder async {
     return await rootBundle.loadString('assets/encoder.json');
   }
@@ -47,7 +47,6 @@ class _MyApp extends State<MyApp> {
   Future<String> get _respondes async {
     return await rootBundle.loadString('assets/responses.json');
   }
-
 
   getData() async {
     final responses_ = await _respondes;
@@ -114,11 +113,10 @@ class _MyApp extends State<MyApp> {
       if (!punctuation.contains(char)) {
         input_ = input_ + char;
       }
-    });
+    }); //remove punctuation from the input
     input = input_;
     text.add(input);
     newInput = texts_to_sequences(text);
-
     newInput = [pad_sequences(newInput, inputDetails.shape[1])];
     Map<int, List> output = {
       0: [
@@ -128,7 +126,8 @@ class _MyApp extends State<MyApp> {
     data.runForMultipleInputs([newInput], output);
 
     late int newOutput;
-    newOutput = argmax(output[0]![0]);
+    newOutput =
+        argmax(output[0]![0]); //get the location of the largest value in a list
     var tag = encoder[newOutput];
 
     if (responses[tag] != null) {
@@ -156,28 +155,22 @@ class _MyApp extends State<MyApp> {
             appBar: AppBar(title: const Text("Chatbot")),
             body: Column(
               children: [
-                Row(
-                  children: [
-                    Flexible(
-                      child: TextField(
-                        controller: controller,
-                        decoration: const InputDecoration(
-                            border: OutlineInputBorder(),
-                            hintText: "Ask me something"),
-                        textInputAction: TextInputAction.go,
-                        onSubmitted: (value) async {
-                          if (controller.text.isNotEmpty) {
-                            var input = controller.text;
-                            get_result(input, await interpreter).then((value) {
-                              answer = value;
-                              controller.text = "";
-                              setState(() {});
-                            });
-                          }
-                        },
-                      ),
-                    ),
-                  ],
+                TextField(
+                  controller: controller,
+                  decoration: const InputDecoration(
+                      border: OutlineInputBorder(),
+                      hintText: "Ask me something"),
+                  textInputAction: TextInputAction.go,
+                  onSubmitted: (value) async {
+                    if (controller.text.isNotEmpty) {
+                      var input = controller.text;
+                      get_result(input, await interpreter).then((value) {
+                        answer = value;
+                        controller.text = "";
+                        setState(() {});
+                      });
+                    }
+                  },
                 ),
                 Text(answer),
               ],
