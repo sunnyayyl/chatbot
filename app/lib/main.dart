@@ -113,17 +113,25 @@ class _MyApp extends State<MyApp> {
     final version_ = await _version;
     final model_ = await _tflite_model;
     bool update=false;
-    final request = await http.get(Uri.parse("https://raw.githubusercontent.com/sunny0531/Project/main/version.txt"));
-    final response = request.body.toString();
-    if (version_.existsSync()&&response!=version_.readAsStringSync()){
-        version_.writeAsStringSync(response);
-        update=true;
+
+    try {
+      final result = await InternetAddress.lookup('google.com');
+      if (result.isNotEmpty && result[0].rawAddress.isNotEmpty) {
+        final request = await http.get(Uri.parse("https://raw.githubusercontent.com/sunny0531/Project/main/version.txt"));
+        final response = request.body.toString();
+        if (version_.existsSync()&&response!=version_.readAsStringSync()){
+          version_.writeAsStringSync(response);
+          update=true;
+        }
+        download("https://raw.githubusercontent.com/sunny0531/Project/main/responses.json", responses_,update);
+        download("https://raw.githubusercontent.com/sunny0531/Project/main/jobs.json", jobs_,update);
+        download("https://raw.githubusercontent.com/sunny0531/Project/main/encoder.json", encoder_,update);
+        download("https://raw.githubusercontent.com/sunny0531/Project/main/word_dict.json", tokenizer_,update);
+        download("https://raw.githubusercontent.com/sunny0531/Project/main/model.tflite", model_,update);
+      }
+    } on SocketException catch (_) {
+      print("No network found");
     }
-    download("https://raw.githubusercontent.com/sunny0531/Project/main/responses.json", responses_,update);
-    download("https://raw.githubusercontent.com/sunny0531/Project/main/jobs.json", jobs_,update);
-    download("https://raw.githubusercontent.com/sunny0531/Project/main/encoder.json", encoder_,update);
-    download("https://raw.githubusercontent.com/sunny0531/Project/main/word_dict.json", tokenizer_,update);
-    download("https://raw.githubusercontent.com/sunny0531/Project/main/model.tflite", model_,update);
     responses= jsonDecode(responses_.readAsStringSync());
     jobs = jsonDecode(jobs_.readAsStringSync());
     encoder = jsonDecode(encoder_.readAsStringSync());
@@ -198,14 +206,24 @@ class _MyApp extends State<MyApp> {
     await prefs.setString("log", log);
   }
   getWeather()async{
-    http.Response data_=await http.get(Uri.parse("https://api.openweathermap.org/data/2.5/weather?id=1819729&appid=a03cf4b424ffa1976d1fc494ec38e0fa"));
-    Map data=json.decode(data_.body);
-    return [data["weather"][0]["main"],data["main"]["temp"]];
+    try {
+      http.Response data_ = await http.get(Uri.parse(
+          "https://api.openweathermap.org/data/2.5/weather?id=1819729&appid=a03cf4b424ffa1976d1fc494ec38e0fa"));
+      Map data = json.decode(data_.body);
+      return [data["weather"][0]["main"], data["main"]["temp"]];
+    }on SocketException catch (_) {
+      return ["unknown",273.15];
+    }
   }
   getWikipediaResult(String a) async{
-    http.Response data_=await http.get(Uri.parse("https://en.wikipedia.org/w/api.php?action=opensearch&search=${a}&limit=1&namespace=0&format=json"));
-    List data=json.decode(data_.body);
-    return [data[1][0],data[3][0]];
+    try {
+      http.Response data_ = await http.get(Uri.parse(
+          "https://en.wikipedia.org/w/api.php?action=opensearch&search=${a}&limit=1&namespace=0&format=json"));
+      List data = json.decode(data_.body);
+      return [data[1][0], data[3][0]];
+    }on SocketException catch (_) {
+      return ["unknown","unknown"];
+    }
   }
 
   Future<dynamic> get_result(String input, Interpreter data) async {
@@ -264,9 +282,19 @@ class _MyApp extends State<MyApp> {
     log("Jobs: " + (jobs[tag]??[null]).toString());
     if (wikipedia.isNotEmpty){
       log("Searching: "+wikipedia[0]);
+      wikipedia=[];
     }
     log("Bot output: "+result);
     log("\n");
+    try {
+      final result = await InternetAddress.lookup('google.com');
+      if (result.isNotEmpty && result[0].rawAddress.isNotEmpty) {
+      }
+    } on SocketException catch (_) {
+      if (jobs[0]!=null) {
+        result = "No internet";
+      }
+    }
     return result;
   }
 
@@ -299,7 +327,14 @@ class _MyApp extends State<MyApp> {
                           messages.add(Message(message: value, sender: "bot"));
                           setState(() {
                           });
-                          Future.delayed(const Duration(milliseconds: 100), () {
+                          Future.delayed(const Duration(milliseconds: 0), () {
+                            _controller.animateTo(
+                              _controller.position.maxScrollExtent,
+                              curve: Curves.easeOut,
+                              duration: const Duration(milliseconds: 500),
+                            );
+                          });
+                          Future.delayed(const Duration(milliseconds: 200), () {
                             _controller.animateTo(
                               _controller.position.maxScrollExtent,
                               curve: Curves.easeOut,
@@ -389,6 +424,7 @@ class _MyApp extends State<MyApp> {
                       return const Center(child: CircularProgressIndicator());
                     }
                   }else if(snapshot.hasError){
+                    print(snapshot.error);
                       return  AlertDialog(title: const Text("Restart"),content:const Text("Please restart the app"),actions: [TextButton(onPressed: ()=> SystemChannels.platform.invokeMethod('SystemNavigator.pop'), child: Text("Ok"))],);
                   }else{
                     return  Center(child: Column(

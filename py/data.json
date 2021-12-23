@@ -51,7 +51,8 @@
       "time",
       "What time is it now",
       "Tell me the time",
-      "What time is it"
+      "What time is it",
+      "time"
     ],
     "responses": [
       "It's {time}"
@@ -64,7 +65,8 @@
       "What's the temperature here?",
       "What is it like outside? ",
       "How is the weather?",
-      "What is the temperature here?"
+      "What is the temperature here?",
+      "What's the weather like?"
     ],
     "responses": [
       "It's {main} today.\nThe temperature is {temperature}°C",
