@@ -43,7 +43,7 @@
       "What can you do?"
     ],
     "responses": [
-      "Nothing."
+      "Nothing (For now)"
     ]
   },
   {"tag": "time",
@@ -62,18 +62,13 @@
     "input": [
       "What's it like outside?",
       "How's the weather?",
-      "What's the temperature here?",
       "What is it like outside? ",
       "How is the weather?",
-      "What is the temperature here?",
       "What's the weather like?"
     ],
     "responses": [
-      "It's {main} today.\nThe temperature is {temperature}°C",
-      "It's a {main} day today.\nThe temperature is {temperature} degree celsius."
-    ],
-    "jobs": [
-      "weather"
+      "It's {main} today.",
+      "It's a {main} day today."
     ]
   },
   {"tag": "joke",
@@ -85,20 +80,5 @@
     "responses": [
       "Why do student eat their homework? Because teacher says it's a piece of cake!"
     ]
-  },
-  {"tag": "wikipedia",
-    "input": [
-      "What's a ",
-      "What is a",
-      "What do mean",
-      "What's ",
-      "What is ",
-      "What do mean"
-    ],
-    "responses": [
-      "For result about {wikipedia_title}, please read {wikipedia_link}",
-      "Check out more about {wikipedia_title}, in {wikipedia_link}"
-    ],
-    "jobs": ["wikipedia"]
   }
 ]
