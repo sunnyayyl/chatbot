@@ -55,6 +55,8 @@ with open('../word_dict.json', 'w') as f:
     json.dump(tokenizer.word_index, f)
 with open('../encoder.json', 'w') as f:
     json.dump(dict(zip(encoder.classes_, encoder.transform(encoder.classes_))), f, cls=NumpyEncoder)
+with open('../encoder_reverse.json', 'w') as f:
+    json.dump({v: k for k, v in json.loads(json.dumps(dict(zip(encoder.classes_, encoder.transform(encoder.classes_))), cls=NumpyEncoder)).items()},f)
 with open('../responses.json', 'w') as f:
     with open("data.json") as ff:
         data = json.load(ff)
